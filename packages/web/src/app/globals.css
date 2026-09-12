@@ -1,0 +1,47 @@
+@import "tailwindcss";
+
+:root {
+  --background: #0b0c10;
+  --surface: #15171c;
+  --surface-hover: #1e2129;
+  --foreground: #f2f1ec;
+  --muted: #9a9aa2;
+  --border: #262932;
+  --accent: #8b5cf6;
+  --accent-hover: #7c4ded;
+  --agree: #2ecc71;
+  --disagree: #ef4444;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-hover: var(--surface-hover);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-agree: var(--agree);
+  --color-disagree: var(--disagree);
+  --font-sans: var(--font-inter);
+  --font-display: var(--font-oswald);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+}
+
+::selection {
+  background: var(--accent);
+  color: white;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
