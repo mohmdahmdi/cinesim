@@ -230,6 +230,53 @@ export class SimilaritiesService {
     }));
   }
 
+  /**
+   * Friend-of-a-friend candidates for "suggest a similar movie": if the
+   * community already said A~B and B~C, C is a natural thing to propose for
+   * A (and A for C). Walks outward from tmdbId's direct neighbors, scoring
+   * each candidate by how many such paths reach it, and only goes a hop
+   * further out when the graph near tmdbId is still too sparse to fill
+   * `limit` — the deeper a candidate is, the weaker its signal.
+   */
+  async suggestionCandidateIds(tmdbId: number, limit = 8): Promise<number[]> {
+    const directNeighbors = new Set(await this.getNeighborIds(tmdbId));
+    const visited = new Set<number>([tmdbId, ...directNeighbors]);
+    const scores = new Map<number, number>();
+
+    const MAX_HOPS_BEYOND_DIRECT = 2;
+    let frontier = [...directNeighbors];
+
+    for (let hop = 0; hop < MAX_HOPS_BEYOND_DIRECT && frontier.length > 0; hop++) {
+      if (scores.size >= limit) break;
+
+      const nextFrontier: number[] = [];
+      for (const nodeId of frontier) {
+        const neighbors = await this.getNeighborIds(nodeId);
+        for (const neighborId of neighbors) {
+          if (neighborId === tmdbId || directNeighbors.has(neighborId)) continue;
+          scores.set(neighborId, (scores.get(neighborId) ?? 0) + 1);
+          if (!visited.has(neighborId)) {
+            visited.add(neighborId);
+            nextFrontier.push(neighborId);
+          }
+        }
+      }
+      frontier = nextFrontier;
+    }
+
+    return [...scores.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, limit)
+      .map(([id]) => id);
+  }
+
+  private async getNeighborIds(tmdbId: number): Promise<number[]> {
+    const edges = await this.similarityRepo.find({
+      where: [{ movieLowId: tmdbId }, { movieHighId: tmdbId }],
+    });
+    return edges.map((e) => (e.movieLowId === tmdbId ? e.movieHighId : e.movieLowId));
+  }
+
   async listByUsername(username: string) {
     const user = await this.usersService.findByUsername(username);
     if (!user) throw new NotFoundException('User not found');

@@ -57,7 +57,7 @@ export async function getDiscoverMovies(): Promise<Movie[]> {
 
 export async function getMovieDetail(
   tmdbId: number
-): Promise<{ movie: Movie; similar: SimilarityListItem[] }> {
+): Promise<{ movie: Movie; similar: SimilarityListItem[]; suggestionCandidates: Movie[] }> {
   const { data } = await instance.get(`/movies/${tmdbId}`);
   return data;
 }

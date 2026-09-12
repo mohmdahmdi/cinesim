@@ -11,7 +11,7 @@ import { errorMessage, successMessage } from "@/utils/toasts";
 import SimilarityCard from "@/components/SimilarityCard";
 import SuggestSimilarForm from "@/components/SuggestSimilarForm";
 
-type MovieDetailData = { movie: Movie; similar: SimilarityListItem[] };
+type MovieDetailData = { movie: Movie; similar: SimilarityListItem[]; suggestionCandidates: Movie[] };
 
 export default function MoviePage({ params }: { params: Promise<{ tmdbId: string }> }) {
   const { tmdbId: tmdbIdParam } = use(params);
@@ -173,7 +173,7 @@ export default function MoviePage({ params }: { params: Promise<{ tmdbId: string
     return <div className="p-10 text-center text-muted">Loading…</div>;
   }
 
-  const { movie, similar } = data;
+  const { movie, similar, suggestionCandidates } = data;
   const directors = movie.credits.filter((c) => c.role === "director");
   const cast = movie.credits.filter((c) => c.role === "cast").slice(0, 8);
   const backdrop = backdropUrl(movie.backdropPath);
@@ -270,7 +270,7 @@ export default function MoviePage({ params }: { params: Promise<{ tmdbId: string
 
         <div className="mt-8">
           <h3 className="mb-3 font-display text-base text-foreground">Suggest a similar movie</h3>
-          <SuggestSimilarForm tmdbId={tmdbId} />
+          <SuggestSimilarForm tmdbId={tmdbId} candidates={suggestionCandidates} />
         </div>
       </div>
     </div>

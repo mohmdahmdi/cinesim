@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { Movie } from './entities/movie.entity';
 import { MovieCacheService } from '../tmdb/movie-cache.service';
 import { SimilaritiesService } from '../similarities/similarities.service';
@@ -21,8 +21,22 @@ export class MoviesService {
 
   async getDetail(tmdbId: number, currentUserId?: string) {
     const movie = await this.movieCache.getOrImport(tmdbId);
-    const similar = await this.similaritiesService.listForMovie(tmdbId, currentUserId);
-    return { movie, similar };
+    const [similar, suggestionCandidates] = await Promise.all([
+      this.similaritiesService.listForMovie(tmdbId, currentUserId),
+      this.getSuggestionCandidates(tmdbId),
+    ]);
+    return { movie, similar, suggestionCandidates };
+  }
+
+  /** Movies to surface under "suggest a similar movie", drawn from the
+   * community graph itself (friend-of-a-friend) rather than typed search. */
+  private async getSuggestionCandidates(tmdbId: number, limit = 8): Promise<Movie[]> {
+    const ids = await this.similaritiesService.suggestionCandidateIds(tmdbId, limit);
+    if (ids.length === 0) return [];
+
+    const movies = await this.movieRepo.find({ where: { tmdbId: In(ids) } });
+    const byId = new Map(movies.map((m) => [m.tmdbId, m]));
+    return ids.map((id) => byId.get(id)).filter((m): m is Movie => !!m);
   }
 
   getSimilar(tmdbId: number, currentUserId?: string) {
