@@ -10,7 +10,7 @@ import { MovieCacheService } from './movie-cache.service';
 
 @Module({
   imports: [
-    HttpModule.register({ timeout: 10000 }),
+    HttpModule.register({ timeout: 30000 }),
     TypeOrmModule.forFeature([Movie, Genre, Person, MovieCredit]),
   ],
   providers: [TmdbClient, MovieCacheService],

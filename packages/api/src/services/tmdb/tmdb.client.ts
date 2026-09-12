@@ -17,14 +17,26 @@ export class TmdbClient {
     this.authHeader = `Bearer ${config.get<string>('TMDB_READ_ACCESS_TOKEN')}`;
   }
 
-  private async get<T>(path: string, params: Record<string, string | number> = {}): Promise<T> {
-    const { data } = await firstValueFrom(
-      this.http.get<T>(`${BASE_URL}${path}`, {
-        headers: { Authorization: this.authHeader },
-        params: { language: 'en-US', include_adult: 'false', ...params },
-      }),
-    );
-    return data;
+  private async get<T>(
+    path: string,
+    params: Record<string, string | number> = {},
+    attempt = 1,
+  ): Promise<T> {
+    try {
+      const { data } = await firstValueFrom(
+        this.http.get<T>(`${BASE_URL}${path}`, {
+          headers: { Authorization: this.authHeader },
+          params: { language: 'en-US', include_adult: 'false', ...params },
+        }),
+      );
+      return data;
+    } catch (err) {
+      // A VPN/proxy hop between here and TMDB can be flaky — retry transient
+      // failures a couple of times with backoff before giving up on this call.
+      if (attempt >= 3) throw err;
+      await new Promise((resolve) => setTimeout(resolve, attempt * 1500));
+      return this.get<T>(path, params, attempt + 1);
+    }
   }
 
   searchMovies(query: string, page = 1) {
