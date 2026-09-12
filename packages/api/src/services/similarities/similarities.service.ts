@@ -30,6 +30,7 @@ export interface SimilarityListItem {
   score: number;
   label: string;
   myVote: VoteValue | null;
+  isMine: boolean;
 }
 
 @Injectable()
@@ -131,6 +132,73 @@ export class SimilaritiesService {
     });
   }
 
+  /** Removes the caller's own vote from a suggestion without casting a new one. */
+  async retractVote(similarityId: string, userId: string) {
+    const similarity = await this.similarityRepo.findOne({ where: { id: similarityId } });
+    if (!similarity) throw new NotFoundException('Similarity suggestion not found');
+
+    return this.dataSource.transaction(async (manager) => {
+      const existingVote = await manager.findOne(SimilarityVote, {
+        where: { similarityId, userId },
+      });
+      if (!existingVote) {
+        return {
+          similarityId,
+          agreeCount: similarity.agreeCount,
+          disagreeCount: similarity.disagreeCount,
+          score: similarity.score,
+          label: similarityLabel(similarity.agreeCount, similarity.disagreeCount),
+          myVote: null,
+        };
+      }
+
+      await manager.delete(SimilarityVote, { id: existingVote.id });
+      await manager.decrement(User, { id: userId }, 'votesCount', 1);
+      await manager.decrement(User, { id: userId }, 'reputationScore', VOTE_POINTS);
+
+      const counts = await manager
+        .createQueryBuilder(SimilarityVote, 'v')
+        .select('v.vote', 'vote')
+        .addSelect('COUNT(*)', 'count')
+        .where('v.similarityId = :similarityId', { similarityId })
+        .groupBy('v.vote')
+        .getRawMany<{ vote: VoteValue; count: string }>();
+
+      const agreeCount = Number(counts.find((c) => c.vote === VoteValue.AGREE)?.count ?? 0);
+      const disagreeCount = Number(counts.find((c) => c.vote === VoteValue.DISAGREE)?.count ?? 0);
+      const score = wilsonLowerBound(agreeCount, disagreeCount);
+
+      await manager.update(Similarity, { id: similarityId }, { agreeCount, disagreeCount, score });
+
+      return {
+        similarityId,
+        agreeCount,
+        disagreeCount,
+        score,
+        label: similarityLabel(agreeCount, disagreeCount),
+        myVote: null,
+      };
+    });
+  }
+
+  /** Deletes a suggestion — only the person who made it may remove it. */
+  async remove(similarityId: string, userId: string): Promise<void> {
+    const similarity = await this.similarityRepo.findOne({ where: { id: similarityId } });
+    if (!similarity) throw new NotFoundException('Similarity suggestion not found');
+    if (similarity.suggestedByUserId !== userId) {
+      throw new ForbiddenException('You can only delete your own suggestions');
+    }
+
+    await this.dataSource.transaction(async (manager) => {
+      await manager.delete(Similarity, { id: similarityId }); // cascades similarity_votes
+      await manager.decrement(User, { id: userId }, 'suggestionsCount', 1);
+      await manager.decrement(User, { id: userId }, 'reputationScore', SUGGESTION_POINTS);
+      if (similarity.validated) {
+        await manager.decrement(User, { id: userId }, 'reputationScore', VALIDATED_BONUS_POINTS);
+      }
+    });
+  }
+
   async listForMovie(tmdbId: number, currentUserId?: string): Promise<SimilarityListItem[]> {
     const similarities = await this.similarityRepo
       .createQueryBuilder('s')
@@ -158,6 +226,7 @@ export class SimilaritiesService {
       score: s.score,
       label: similarityLabel(s.agreeCount, s.disagreeCount),
       myVote: myVotes.get(s.id) ?? null,
+      isMine: !!currentUserId && s.suggestedByUserId === currentUserId,
     }));
   }
 

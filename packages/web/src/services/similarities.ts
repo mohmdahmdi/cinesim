@@ -7,7 +7,7 @@ export type VoteResult = {
   disagreeCount: number;
   score: number;
   label: string;
-  myVote: "agree" | "disagree";
+  myVote: "agree" | "disagree" | null;
 };
 
 export type UserSuggestion = {
@@ -26,6 +26,15 @@ export async function voteSimilarity(
 ): Promise<VoteResult> {
   const { data } = await instance.post(`/similarities/${similarityId}/vote`, { vote });
   return data;
+}
+
+export async function retractVote(similarityId: string): Promise<VoteResult> {
+  const { data } = await instance.delete(`/similarities/${similarityId}/vote`);
+  return data;
+}
+
+export async function deleteSimilarity(similarityId: string): Promise<void> {
+  await instance.delete(`/similarities/${similarityId}`);
 }
 
 export async function getSuggestionsByUsername(username: string): Promise<UserSuggestion[]> {

@@ -4,10 +4,10 @@ import { use } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getMovieDetail, Movie, SimilarityListItem } from "@/services/movies";
-import { voteSimilarity } from "@/services/similarities";
+import { deleteSimilarity, retractVote, voteSimilarity } from "@/services/similarities";
 import { useAuth } from "@/providers/AuthProvider";
 import { backdropUrl, posterUrl } from "@/utils/tmdbImage";
-import { errorMessage } from "@/utils/toasts";
+import { errorMessage, successMessage } from "@/utils/toasts";
 import SimilarityCard from "@/components/SimilarityCard";
 import SuggestSimilarForm from "@/components/SuggestSimilarForm";
 
@@ -68,6 +68,71 @@ export default function MoviePage({ params }: { params: Promise<{ tmdbId: string
     },
   });
 
+  const retractMutation = useMutation({
+    mutationFn: (similarityId: string) => retractVote(similarityId),
+    onMutate: async (similarityId) => {
+      await queryClient.cancelQueries({ queryKey });
+      const previous = queryClient.getQueryData<MovieDetailData>(queryKey);
+
+      if (previous) {
+        queryClient.setQueryData<MovieDetailData>(queryKey, {
+          ...previous,
+          similar: previous.similar.map((item) => {
+            if (item.similarityId !== similarityId) return item;
+            return {
+              ...item,
+              agreeCount: item.agreeCount - (item.myVote === "agree" ? 1 : 0),
+              disagreeCount: item.disagreeCount - (item.myVote === "disagree" ? 1 : 0),
+              myVote: null,
+            };
+          }),
+        });
+      }
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) queryClient.setQueryData(queryKey, context.previous);
+      errorMessage("Couldn't remove your vote. Please try again.");
+    },
+    onSuccess: (result) => {
+      queryClient.setQueryData<MovieDetailData>(queryKey, (old) =>
+        old
+          ? {
+              ...old,
+              similar: old.similar.map((item) =>
+                item.similarityId === result.similarityId ? { ...item, ...result } : item,
+              ),
+            }
+          : old,
+      );
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (similarityId: string) => deleteSimilarity(similarityId),
+    onMutate: async (similarityId) => {
+      await queryClient.cancelQueries({ queryKey });
+      const previous = queryClient.getQueryData<MovieDetailData>(queryKey);
+
+      if (previous) {
+        queryClient.setQueryData<MovieDetailData>(queryKey, {
+          ...previous,
+          similar: previous.similar.filter((item) => item.similarityId !== similarityId),
+        });
+      }
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) queryClient.setQueryData(queryKey, context.previous);
+      errorMessage("Couldn't delete your suggestion. Please try again.");
+    },
+    onSuccess: () => {
+      successMessage("Suggestion deleted.");
+    },
+  });
+
+  const isMutating = voteMutation.isPending || retractMutation.isPending || deleteMutation.isPending;
+
   const handleVote = (similarityId: string, vote: "agree" | "disagree") => {
     if (!user) {
       errorMessage("Log in to vote on similarities.");
@@ -75,6 +140,15 @@ export default function MoviePage({ params }: { params: Promise<{ tmdbId: string
       return;
     }
     voteMutation.mutate({ similarityId, vote });
+  };
+
+  const handleRetract = (similarityId: string) => {
+    retractMutation.mutate(similarityId);
+  };
+
+  const handleDelete = (similarityId: string) => {
+    if (typeof window !== "undefined" && !window.confirm("Delete this suggestion?")) return;
+    deleteMutation.mutate(similarityId);
   };
 
   if (isError) {
@@ -186,8 +260,10 @@ export default function MoviePage({ params }: { params: Promise<{ tmdbId: string
             <SimilarityCard
               key={item.similarityId}
               item={item}
-              disabled={voteMutation.isPending}
+              disabled={isMutating}
               onVote={(vote) => handleVote(item.similarityId, vote)}
+              onRetract={() => handleRetract(item.similarityId)}
+              onDelete={() => handleDelete(item.similarityId)}
             />
           ))}
         </div>

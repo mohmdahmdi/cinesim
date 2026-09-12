@@ -43,7 +43,7 @@ export class MovieCacheService {
     });
     if (existing) return existing;
 
-    let details;
+    let details: TmdbMovieDetails;
     try {
       details = await this.tmdb.getMovieDetails(tmdbId);
     } catch {

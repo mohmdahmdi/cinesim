@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { SimilaritiesService } from './similarities.service';
 import { VoteDto } from './dto/vote.dto';
@@ -15,6 +15,18 @@ export class SimilaritiesController {
   @Post('similarities/:id/vote')
   vote(@Param('id') id: string, @Body() dto: VoteDto, @CurrentUser() user: JwtPayload) {
     return this.similaritiesService.vote(id, user.sub, dto.vote);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete('similarities/:id/vote')
+  retractVote(@Param('id') id: string, @CurrentUser() user: JwtPayload) {
+    return this.similaritiesService.retractVote(id, user.sub);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete('similarities/:id')
+  remove(@Param('id') id: string, @CurrentUser() user: JwtPayload) {
+    return this.similaritiesService.remove(id, user.sub);
   }
 
   @Get('similarities/by-user/:username')

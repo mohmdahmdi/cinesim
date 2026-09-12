@@ -42,6 +42,7 @@ export type SimilarityListItem = {
   score: number;
   label: string;
   myVote: "agree" | "disagree" | null;
+  isMine: boolean;
 };
 
 export async function searchMovies(query: string): Promise<MovieSearchResult[]> {
