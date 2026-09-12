@@ -22,9 +22,10 @@ export class MoviesController {
     return this.moviesService.discover();
   }
 
+  @UseGuards(OptionalJwtAuthGuard)
   @Get(':tmdbId')
-  getDetail(@Param('tmdbId', ParseIntPipe) tmdbId: number) {
-    return this.moviesService.getDetail(tmdbId);
+  getDetail(@Param('tmdbId', ParseIntPipe) tmdbId: number, @CurrentUser() user?: JwtPayload) {
+    return this.moviesService.getDetail(tmdbId, user?.sub);
   }
 
   @UseGuards(OptionalJwtAuthGuard)

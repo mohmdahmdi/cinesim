@@ -19,9 +19,9 @@ export class MoviesService {
     return this.movieCache.search(query);
   }
 
-  async getDetail(tmdbId: number) {
+  async getDetail(tmdbId: number, currentUserId?: string) {
     const movie = await this.movieCache.getOrImport(tmdbId);
-    const similar = await this.similaritiesService.listForMovie(tmdbId);
+    const similar = await this.similaritiesService.listForMovie(tmdbId, currentUserId);
     return { movie, similar };
   }
 
