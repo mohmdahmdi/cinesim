@@ -66,11 +66,14 @@ const applyResponseInterceptor = (instance: AxiosInstance) => {
         case 400:
         case 403:
         case 500:
-          console.error(`Error ${status}:`, data?.message || error.message);
+          // console.warn, not console.error — Next's dev overlay treats any
+          // console.error as a blocking runtime error, but these are API
+          // errors we already surface to the user via a toast at the call site.
+          console.warn(`Error ${status}:`, data?.message || error.message);
           break;
 
         default:
-          console.error("Request failed:", error.message);
+          console.warn("Request failed:", error.message);
       }
 
       return Promise.reject(error);

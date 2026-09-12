@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, ServiceUnavailableException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ILike, In, Repository } from 'typeorm';
 import { Movie } from '../movies/entities/movie.entity';
@@ -43,7 +43,14 @@ export class MovieCacheService {
     });
     if (existing) return existing;
 
-    const details = await this.tmdb.getMovieDetails(tmdbId);
+    let details;
+    try {
+      details = await this.tmdb.getMovieDetails(tmdbId);
+    } catch {
+      throw new ServiceUnavailableException(
+        "Couldn't reach the movie database right now. Please try again in a moment.",
+      );
+    }
     await this.upsertFromTmdb(details);
 
     const imported = await this.movieRepo.findOneOrFail({

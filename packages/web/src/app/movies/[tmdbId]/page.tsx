@@ -21,7 +21,7 @@ export default function MoviePage({ params }: { params: Promise<{ tmdbId: string
   const queryClient = useQueryClient();
   const queryKey = ["movie", tmdbId];
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey,
     queryFn: () => getMovieDetail(tmdbId),
   });
@@ -76,6 +76,24 @@ export default function MoviePage({ params }: { params: Promise<{ tmdbId: string
     }
     voteMutation.mutate({ similarityId, vote });
   };
+
+  if (isError) {
+    const message =
+      (error as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+      "Couldn't load this movie. Please try again.";
+    return (
+      <div className="mx-auto max-w-md px-4 py-24 text-center">
+        <p className="text-sm text-muted">{message}</p>
+        <button
+          type="button"
+          onClick={() => refetch()}
+          className="mt-4 rounded-full bg-accent px-4 py-2 text-sm text-white hover:bg-accent-hover"
+        >
+          Try again
+        </button>
+      </div>
+    );
+  }
 
   if (isLoading || !data) {
     return <div className="p-10 text-center text-muted">Loading…</div>;
