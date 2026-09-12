@@ -24,6 +24,9 @@ const Navbar = () => {
         </div>
 
         <nav className="ml-auto flex items-center gap-4 text-sm">
+          <Link href="/compare" className="hidden text-muted hover:text-foreground sm:inline">
+            Compare
+          </Link>
           <Link href="/leaderboard" className="hidden text-muted hover:text-foreground sm:inline">
             Leaderboard
           </Link>

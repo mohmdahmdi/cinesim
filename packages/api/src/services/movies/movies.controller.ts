@@ -2,6 +2,7 @@ import { Body, Controller, Get, Param, ParseIntPipe, Post, Query, UseGuards } fr
 import { ApiTags } from '@nestjs/swagger';
 import { MoviesService } from './movies.service';
 import { SuggestSimilarityDto } from '../similarities/dto/suggest-similarity.dto';
+import { BulkSuggestSimilarityDto } from '../similarities/dto/bulk-suggest-similarity.dto';
 import { JwtAuthGuard } from '../../shared/guards/jwt-auth.guard';
 import { OptionalJwtAuthGuard } from '../../shared/guards/optional-jwt-auth.guard';
 import { CurrentUser } from '../../shared/decorators/current-user.decorator';
@@ -41,6 +42,16 @@ export class MoviesController {
     @Body() dto: SuggestSimilarityDto,
     @CurrentUser() user: JwtPayload,
   ) {
-    return this.moviesService.suggestSimilar(tmdbId, dto.similarToTmdbId, user.sub);
+    return this.moviesService.suggestSimilar(tmdbId, dto.similarToTmdbId, user.sub, dto.reasons);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post(':tmdbId/similar/bulk')
+  suggestSimilarBulk(
+    @Param('tmdbId', ParseIntPipe) tmdbId: number,
+    @Body() dto: BulkSuggestSimilarityDto,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.moviesService.suggestSimilarBulk(tmdbId, dto.items, user.sub);
   }
 }

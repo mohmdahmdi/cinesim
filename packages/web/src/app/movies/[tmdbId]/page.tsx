@@ -1,6 +1,7 @@
 "use client";
 
 import { use } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getMovieDetail, Movie, SimilarityListItem } from "@/services/movies";
@@ -210,6 +211,10 @@ export default function MoviePage({ params }: { params: Promise<{ tmdbId: string
                 {movie.releaseDate?.slice(0, 4)}
                 {movie.runtime ? ` · ${movie.runtime} min` : ""}
                 {movie.originalLanguage ? ` · ${movie.originalLanguage.toUpperCase()}` : ""}
+                {" · "}
+                <Link href={`/compare?a=${tmdbId}`} className="text-accent hover:underline">
+                  Compare with another movie
+                </Link>
               </p>
 
               {movie.genres.length > 0 && (
@@ -260,6 +265,7 @@ export default function MoviePage({ params }: { params: Promise<{ tmdbId: string
             <SimilarityCard
               key={item.similarityId}
               item={item}
+              fromTmdbId={tmdbId}
               disabled={isMutating}
               onVote={(vote) => handleVote(item.similarityId, vote)}
               onRetract={() => handleRetract(item.similarityId)}

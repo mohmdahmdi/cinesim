@@ -4,6 +4,7 @@ import { In, Repository } from 'typeorm';
 import { Movie } from './entities/movie.entity';
 import { MovieCacheService } from '../tmdb/movie-cache.service';
 import { SimilaritiesService } from '../similarities/similarities.service';
+import { SimilarityReason } from '../similarities/entities/similarity-reason-tag.entity';
 
 const DISCOVER_LANGUAGES = ['en', 'fr', 'ja', 'ko', 'hi', 'es', 'it', 'de', 'zh', 'fa', 'ru', 'pt'];
 
@@ -43,8 +44,21 @@ export class MoviesService {
     return this.similaritiesService.listForMovie(tmdbId, currentUserId);
   }
 
-  suggestSimilar(tmdbId: number, similarToTmdbId: number, userId: string) {
-    return this.similaritiesService.suggest(tmdbId, similarToTmdbId, userId);
+  suggestSimilar(
+    tmdbId: number,
+    similarToTmdbId: number,
+    userId: string,
+    reasons?: SimilarityReason[],
+  ) {
+    return this.similaritiesService.suggest(tmdbId, similarToTmdbId, userId, reasons);
+  }
+
+  suggestSimilarBulk(
+    tmdbId: number,
+    items: { similarToTmdbId: number; reasons?: SimilarityReason[] }[],
+    userId: string,
+  ) {
+    return this.similaritiesService.suggestBulk(tmdbId, items, userId);
   }
 
   /**

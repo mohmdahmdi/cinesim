@@ -4,10 +4,12 @@ import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { useAuth } from "@/providers/AuthProvider";
-import { Movie, suggestSimilar } from "@/services/movies";
-import { successMessage, errorMessage } from "@/utils/toasts";
+import { Movie, MovieSearchResult, suggestSimilar, suggestSimilarBulk } from "@/services/movies";
+import { SimilarityReason } from "@/services/similarities";
+import { successMessage, errorMessage, warningMessage } from "@/utils/toasts";
 import { posterUrl } from "@/utils/tmdbImage";
 import MovieSearchAutocomplete from "./MovieSearchAutocomplete";
+import ReasonPicker from "./ReasonPicker";
 
 export default function SuggestSimilarForm({
   tmdbId,
@@ -19,12 +21,18 @@ export default function SuggestSimilarForm({
   const { user, isReady } = useAuth();
   const queryClient = useQueryClient();
   const [pendingId, setPendingId] = useState<number | null>(null);
+  const [showReasons, setShowReasons] = useState(false);
+  const [reasons, setReasonsState] = useState<SimilarityReason[]>([]);
 
-  const mutation = useMutation({
-    mutationFn: (similarToTmdbId: number) => suggestSimilar(tmdbId, similarToTmdbId),
+  const invalidateMovie = () => queryClient.invalidateQueries({ queryKey: ["movie", tmdbId] });
+
+  const quickMutation = useMutation({
+    mutationFn: (similarToTmdbId: number) =>
+      suggestSimilar(tmdbId, similarToTmdbId, reasons.length > 0 ? reasons : undefined),
     onSuccess: () => {
       successMessage("Thanks! Your suggestion was added.");
-      queryClient.invalidateQueries({ queryKey: ["movie", tmdbId] });
+      setReasonsState([]);
+      invalidateMovie();
     },
     onError: (err: unknown) => {
       const message =
@@ -34,6 +42,37 @@ export default function SuggestSimilarForm({
     },
     onSettled: () => setPendingId(null),
   });
+
+  const bulkMutation = useMutation({
+    mutationFn: (movies: MovieSearchResult[]) =>
+      suggestSimilarBulk(
+        tmdbId,
+        movies.map((movie) => ({
+          similarToTmdbId: movie.tmdbId,
+          reasons: reasons.length > 0 ? reasons : undefined,
+        }))
+      ),
+    onSuccess: (results) => {
+      const succeeded = results.filter((r) => r.ok).length;
+      const failed = results.length - succeeded;
+      if (succeeded > 0) {
+        successMessage(
+          `Added ${succeeded} suggestion${succeeded === 1 ? "" : "s"}${failed > 0 ? ` (${failed} failed)` : ""}.`
+        );
+      } else {
+        warningMessage("Couldn't add those suggestions.");
+      }
+      setReasonsState([]);
+      invalidateMovie();
+    },
+    onError: () => errorMessage("Couldn't add those suggestions. Please try again."),
+  });
+
+  const toggleReason = (reason: SimilarityReason) => {
+    setReasonsState((prev) =>
+      prev.includes(reason) ? prev.filter((r) => r !== reason) : [...prev, reason]
+    );
+  };
 
   if (isReady && !user) {
     return (
@@ -56,15 +95,15 @@ export default function SuggestSimilarForm({
           <div className="hide-scrollbar flex gap-3 overflow-x-auto pb-1">
             {candidates.map((movie) => {
               const poster = posterUrl(movie.posterPath, "w185");
-              const isPending = mutation.isPending && pendingId === movie.tmdbId;
+              const isPending = quickMutation.isPending && pendingId === movie.tmdbId;
               return (
                 <button
                   key={movie.tmdbId}
                   type="button"
-                  disabled={mutation.isPending}
+                  disabled={quickMutation.isPending}
                   onClick={() => {
                     setPendingId(movie.tmdbId);
-                    mutation.mutate(movie.tmdbId);
+                    quickMutation.mutate(movie.tmdbId);
                   }}
                   className="group w-20 shrink-0 text-left disabled:opacity-50"
                 >
@@ -96,10 +135,28 @@ export default function SuggestSimilarForm({
         placeholder="Which movie is similar to this one?"
         onSelect={(movie) => {
           setPendingId(movie.tmdbId);
-          mutation.mutate(movie.tmdbId);
+          quickMutation.mutate(movie.tmdbId);
         }}
+        onConfirmMultiple={(movies) => bulkMutation.mutate(movies)}
       />
-      {mutation.isPending && !candidates.some((c) => c.tmdbId === pendingId) && (
+      <p className="mt-1 text-[11px] text-muted">
+        Tip: check &quot;Select multiple&quot; in the dropdown to suggest several movies at once.
+      </p>
+
+      <button
+        type="button"
+        onClick={() => setShowReasons((v) => !v)}
+        className="mt-2 text-xs text-muted underline decoration-dotted hover:text-accent"
+      >
+        {showReasons ? "Hide reasons" : "+ Say why (optional)"}
+      </button>
+      {showReasons && (
+        <div className="mt-2">
+          <ReasonPicker value={reasons} onToggle={toggleReason} />
+        </div>
+      )}
+
+      {(quickMutation.isPending || bulkMutation.isPending) && (
         <p className="mt-2 text-xs text-muted">Adding suggestion…</p>
       )}
     </div>

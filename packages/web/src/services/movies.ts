@@ -67,7 +67,25 @@ export async function getSimilarMovies(tmdbId: number): Promise<SimilarityListIt
   return data;
 }
 
-export async function suggestSimilar(tmdbId: number, similarToTmdbId: number) {
-  const { data } = await instance.post(`/movies/${tmdbId}/similar`, { similarToTmdbId });
+export async function suggestSimilar(
+  tmdbId: number,
+  similarToTmdbId: number,
+  reasons?: import("./similarities").SimilarityReason[]
+) {
+  const { data } = await instance.post(`/movies/${tmdbId}/similar`, { similarToTmdbId, reasons });
+  return data;
+}
+
+export type BulkSuggestResult = {
+  similarToTmdbId: number;
+  ok: boolean;
+  error?: string;
+};
+
+export async function suggestSimilarBulk(
+  tmdbId: number,
+  items: { similarToTmdbId: number; reasons?: import("./similarities").SimilarityReason[] }[]
+): Promise<BulkSuggestResult[]> {
+  const { data } = await instance.post(`/movies/${tmdbId}/similar/bulk`, { items });
   return data;
 }

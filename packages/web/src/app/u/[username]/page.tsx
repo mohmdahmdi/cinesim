@@ -50,20 +50,24 @@ export default function ProfilePage({ params }: { params: Promise<{ username: st
             key={s.similarityId}
             className="flex items-center gap-3 rounded-xl border border-border bg-surface p-3 text-sm"
           >
-            {[s.movieLow, s.movieHigh].map((movie) => {
-              const poster = posterUrl(movie.posterPath, "w185");
-              return (
-                <Link key={movie.tmdbId} href={`/movies/${movie.tmdbId}`} className="flex items-center gap-2">
-                  {poster ? (
+            {[s.movieLow, s.movieHigh].map((movie, i) => (
+              <span key={movie.tmdbId} className="flex items-center gap-2">
+                {i === 1 && <span className="text-muted">~</span>}
+                <Link href={`/movies/${movie.tmdbId}`} className="flex items-center gap-2">
+                  {posterUrl(movie.posterPath, "w185") ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={poster} alt={movie.title} className="h-14 w-10 rounded object-cover" />
+                    <img
+                      src={posterUrl(movie.posterPath, "w185")!}
+                      alt={movie.title}
+                      className="h-14 w-10 rounded object-cover"
+                    />
                   ) : (
                     <div className="h-14 w-10 rounded bg-surface-hover" />
                   )}
                   <span className="text-foreground hover:text-accent">{movie.title}</span>
                 </Link>
-              );
-            })}
+              </span>
+            ))}
             <span className="ml-auto shrink-0 text-xs text-muted">{s.label}</span>
           </div>
         ))}
