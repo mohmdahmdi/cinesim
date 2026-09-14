@@ -69,7 +69,7 @@ export default function MovieSearchAutocomplete({
       />
 
       {showDropdown && (
-        <div className="absolute z-50 mt-2 w-full overflow-hidden rounded-xl border border-border bg-surface shadow-xl">
+        <div className="absolute left-1/2 z-50 mt-2 w-[min(22rem,calc(100vw-2rem))] -translate-x-1/2 overflow-hidden rounded-xl border border-border bg-surface shadow-xl sm:left-0 sm:w-full sm:translate-x-0">
           {onConfirmMultiple && (
             <label
               onMouseDown={(e) => e.preventDefault()}
