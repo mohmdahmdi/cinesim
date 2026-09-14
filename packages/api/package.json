@@ -20,7 +20,9 @@
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "create-db": "ts-node -r tsconfig-paths/register scripts/create-db.ts",
     "seed": "ts-node -r tsconfig-paths/register scripts/seed.ts",
-    "reset-similarities": "ts-node -r tsconfig-paths/register scripts/reset-similarities.ts"
+    "reset-similarities": "ts-node -r tsconfig-paths/register scripts/reset-similarities.ts",
+    "seed:similarities:build": "node scripts/data/build-seed-similarities.js",
+    "seed:similarities": "ts-node -r tsconfig-paths/register scripts/seed-similarities-import.ts"
   },
   "dependencies": {
     "@nestjs/axios": "^4.0.0",
