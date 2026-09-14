@@ -11,6 +11,7 @@
   --accent-hover: #7c4ded;
   --agree: #2ecc71;
   --disagree: #ef4444;
+  --warning: #f5a524;
 }
 
 @theme inline {
@@ -24,8 +25,35 @@
   --color-accent-hover: var(--accent-hover);
   --color-agree: var(--agree);
   --color-disagree: var(--disagree);
+  --color-warning: var(--warning);
   --font-sans: var(--font-inter);
   --font-display: var(--font-oswald);
+}
+
+/* Re-skin react-toastify to match the app's dark, purple-accented design. */
+:root {
+  --toastify-color-dark: var(--surface);
+  --toastify-text-color-dark: var(--foreground);
+  --toastify-color-info: var(--accent);
+  --toastify-color-success: var(--agree);
+  --toastify-color-warning: var(--warning);
+  --toastify-color-error: var(--disagree);
+  --toastify-color-progress-dark: var(--accent);
+  --toastify-color-progress-bgo: 0.15;
+  --toastify-toast-bd-radius: 12px;
+  --toastify-toast-shadow: 0 12px 32px -8px rgba(0, 0, 0, 0.5);
+  --toastify-font-family: var(--font-sans);
+}
+
+.Toastify__toast {
+  border: 1px solid var(--border);
+}
+
+.Toastify__close-button {
+  opacity: 0.6;
+}
+.Toastify__close-button:hover {
+  opacity: 1;
 }
 
 body {

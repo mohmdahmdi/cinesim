@@ -48,27 +48,31 @@ export default function ProfilePage({ params }: { params: Promise<{ username: st
         {suggestions.map((s) => (
           <div
             key={s.similarityId}
-            className="flex items-center gap-3 rounded-xl border border-border bg-surface p-3 text-sm"
+            className="flex flex-col gap-3 rounded-xl border border-border bg-surface p-3 text-sm sm:flex-row sm:items-center"
           >
-            {[s.movieLow, s.movieHigh].map((movie, i) => (
-              <span key={movie.tmdbId} className="flex items-center gap-2">
-                {i === 1 && <span className="text-muted">~</span>}
-                <Link href={`/movies/${movie.tmdbId}`} className="flex items-center gap-2">
-                  {posterUrl(movie.posterPath, "w185") ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={posterUrl(movie.posterPath, "w185")!}
-                      alt={movie.title}
-                      className="h-14 w-10 rounded object-cover"
-                    />
-                  ) : (
-                    <div className="h-14 w-10 rounded bg-surface-hover" />
-                  )}
-                  <span className="text-foreground hover:text-accent">{movie.title}</span>
-                </Link>
-              </span>
-            ))}
-            <span className="ml-auto shrink-0 text-xs text-muted">{s.label}</span>
+            <div className="flex flex-col gap-2 sm:min-w-0 sm:flex-1 sm:flex-row sm:items-center sm:gap-3">
+              {[s.movieLow, s.movieHigh].map((movie, i) => (
+                <span key={movie.tmdbId} className="flex min-w-0 items-center gap-2">
+                  {i === 1 && <span className="hidden text-muted sm:inline">~</span>}
+                  <Link href={`/movies/${movie.tmdbId}`} className="flex min-w-0 items-center gap-2">
+                    {posterUrl(movie.posterPath, "w185") ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={posterUrl(movie.posterPath, "w185")!}
+                        alt={movie.title}
+                        className="h-14 w-10 shrink-0 rounded object-cover"
+                      />
+                    ) : (
+                      <div className="h-14 w-10 shrink-0 rounded bg-surface-hover" />
+                    )}
+                    <span className="min-w-0 truncate text-foreground hover:text-accent">
+                      {movie.title}
+                    </span>
+                  </Link>
+                </span>
+              ))}
+            </div>
+            <span className="shrink-0 text-xs text-muted sm:ml-auto">{s.label}</span>
           </div>
         ))}
       </div>
