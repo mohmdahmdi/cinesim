@@ -3,6 +3,6 @@ import { Injectable } from '@nestjs/common';
 @Injectable()
 export class AppService {
   getHello(): string {
-    return 'CineWeb API is running.';
+    return 'CineSim API is running.';
   }
 }

@@ -19,7 +19,7 @@ export default function RegisterPage() {
     mutationFn: registerRequest,
     onSuccess: (data) => {
       setSession(data.accessToken);
-      successMessage(`Welcome to CineWeb, ${data.user.username}!`);
+      successMessage(`Welcome to CineSim, ${data.user.username}!`);
       router.push("/");
     },
     onError: (err: unknown) => {
@@ -32,7 +32,7 @@ export default function RegisterPage() {
 
   return (
     <div className="mx-auto max-w-sm px-4 py-16 sm:px-6">
-      <h1 className="font-display text-2xl text-foreground">Join CineWeb</h1>
+      <h1 className="font-display text-2xl text-foreground">Join CineSim</h1>
       <p className="mt-2 text-sm text-muted">
         Help build the world&apos;s largest community-created map of movie similarities.
       </p>

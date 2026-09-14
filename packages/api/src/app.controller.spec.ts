@@ -16,7 +16,7 @@ describe('AppController', () => {
 
   describe('root', () => {
     it('should return the running message', () => {
-      expect(appController.getHello()).toBe('CineWeb API is running.');
+      expect(appController.getHello()).toBe('CineSim API is running.');
     });
   });
 });

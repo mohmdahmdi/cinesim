@@ -7,7 +7,7 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   const config = new DocumentBuilder()
-    .setTitle('CineWeb API')
+    .setTitle('CineSim API')
     .setDescription('Community-driven movie similarity platform')
     .setVersion('1.0')
     .build();

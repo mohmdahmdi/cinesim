@@ -26,7 +26,7 @@ const oswald = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "CineWeb — movies, mapped by the people who watch them",
+  title: "CineSim — movies, mapped by the people who watch them",
   description:
     "Discover movies that are genuinely similar to each other, according to the community — not an algorithm.",
 };

@@ -11,12 +11,12 @@ const Navbar = () => {
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur">
-      <div className="mx-auto flex max-w-6xl items-center gap-4 px-4 py-3 sm:px-6">
+      <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-3 px-4 py-3 sm:flex-nowrap sm:gap-4 sm:px-6">
         <Link href="/" className="font-display text-xl font-semibold tracking-wide text-foreground">
-          Cine<span className="text-accent">Web</span>
+          Cine<span className="text-accent">Sim</span>
         </Link>
 
-        <div className="max-w-xs flex-1 sm:max-w-sm">
+        <div className="order-3 w-full sm:order-none sm:max-w-sm sm:flex-1">
           <MovieSearchAutocomplete
             placeholder="Search movies…"
             onSelect={(movie) => router.push(`/movies/${movie.tmdbId}`)}
